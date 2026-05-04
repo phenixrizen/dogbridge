@@ -7,10 +7,12 @@ services:
       - ./dogbridge.yaml:/etc/dogbridge/config.yaml:ro
     ports:
       - "8126:8126"
+      - "8125:8125/udp"
       - "4317:4317"
       - "4318:4318"
     depends_on:
       - tempo
+      - victoriametrics
 
   tempo:
     image: grafana/tempo:2.8.0
@@ -21,6 +23,13 @@ services:
       - "3200:3200"
       - "4319:4317"
 
+  victoriametrics:
+    image: victoriametrics/victoria-metrics:v1.123.1
+    command:
+      - "-selfScrapeInterval=10s"
+    ports:
+      - "8428:8428"
+
   grafana:
     image: grafana/grafana:11.6.0
     ports:
@@ -30,3 +39,4 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=admin
     depends_on:
       - tempo
+      - victoriametrics

@@ -9,7 +9,7 @@ processors:
   memory_limiter:
     check_interval: 1s
     limit_mib: 1024
-  transform/drop_high_cardinality:
+  transform/drop_default_high_cardinality:
     metric_statements:
       - context: datapoint
         statements:
@@ -23,6 +23,13 @@ processors:
           - delete_key(attributes, "kafka_sequence")
           - delete_key(attributes, "runtime-id")
           - delete_key(attributes, "key_hash")
+  transform/label_controls:
+    error_mode: ignore
+    metric_statements:
+      - context: datapoint
+        statements:
+          - keep_matching_keys(attributes, "${env:DOGBRIDGE_METRICS_LABEL_ALLOW_REGEX:.*}")
+          - delete_matching_keys(attributes, "${env:DOGBRIDGE_METRICS_LABEL_DENY_REGEX:^$}")
   batch: {}
 
 exporters:
@@ -33,5 +40,5 @@ service:
   pipelines:
     metrics:
       receivers: [statsd]
-      processors: [memory_limiter, transform/drop_high_cardinality, batch]
+      processors: [memory_limiter, transform/drop_default_high_cardinality, transform/label_controls, batch]
       exporters: [prometheusremotewrite]
