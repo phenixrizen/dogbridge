@@ -1,0 +1,29 @@
+receivers:
+  datadog:
+    endpoint: 0.0.0.0:8126
+
+processors:
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 1024
+  resource:
+    attributes:
+      - key: telemetry.gateway
+        value: dogbridge
+        action: upsert
+  batch:
+    timeout: 5s
+    send_batch_size: 8192
+
+exporters:
+  otlp/tempo:
+    endpoint: tempo.monitoring.svc.cluster.local:4317
+    tls:
+      insecure: true
+
+service:
+  pipelines:
+    traces:
+      receivers: [datadog]
+      processors: [memory_limiter, resource, batch]
+      exporters: [otlp/tempo]
