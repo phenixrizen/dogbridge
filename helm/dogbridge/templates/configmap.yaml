@@ -1,1 +1,9 @@
-# Placeholder template; flesh out in milestone 4.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "dogbridge.fullname" . }}-config
+  labels:
+    {{- include "dogbridge.labels" . | nindent 4 }}
+data:
+  collector.yaml: |
+{{ .Values.config.content | indent 4 }}

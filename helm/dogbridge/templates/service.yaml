@@ -1,1 +1,35 @@
-# Placeholder template; flesh out in milestone 4.
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "dogbridge.fullname" . }}
+  labels:
+    {{- include "dogbridge.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  selector:
+    {{- include "dogbridge.selectorLabels" . | nindent 4 }}
+  ports:
+    {{- if .Values.ports.datadogTraces.enabled }}
+    - name: datadog-traces
+      port: {{ .Values.ports.datadogTraces.servicePort }}
+      targetPort: {{ .Values.ports.datadogTraces.containerPort }}
+      protocol: {{ .Values.ports.datadogTraces.protocol }}
+    {{- end }}
+    {{- if .Values.ports.dogstatsd.enabled }}
+    - name: dogstatsd
+      port: {{ .Values.ports.dogstatsd.servicePort }}
+      targetPort: {{ .Values.ports.dogstatsd.containerPort }}
+      protocol: {{ .Values.ports.dogstatsd.protocol }}
+    {{- end }}
+    {{- if .Values.ports.otlpGrpc.enabled }}
+    - name: otlp-grpc
+      port: {{ .Values.ports.otlpGrpc.servicePort }}
+      targetPort: {{ .Values.ports.otlpGrpc.containerPort }}
+      protocol: {{ .Values.ports.otlpGrpc.protocol }}
+    {{- end }}
+    {{- if .Values.ports.otlpHttp.enabled }}
+    - name: otlp-http
+      port: {{ .Values.ports.otlpHttp.servicePort }}
+      targetPort: {{ .Values.ports.otlpHttp.containerPort }}
+      protocol: {{ .Values.ports.otlpHttp.protocol }}
+    {{- end }}

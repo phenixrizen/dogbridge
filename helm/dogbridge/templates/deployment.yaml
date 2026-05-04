@@ -1,1 +1,70 @@
-# Placeholder template; flesh out in milestone 4.
+{{- if eq .Values.mode "deployment" }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "dogbridge.fullname" . }}
+  labels:
+    {{- include "dogbridge.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "dogbridge.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "dogbridge.selectorLabels" . | nindent 8 }}
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      serviceAccountName: {{ include "dogbridge.serviceAccountName" . }}
+      containers:
+        - name: dogbridge
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args: ["--config=/etc/dogbridge/collector.yaml"]
+          ports:
+            {{- if .Values.ports.datadogTraces.enabled }}
+            - name: datadog-traces
+              containerPort: {{ .Values.ports.datadogTraces.containerPort }}
+              protocol: {{ .Values.ports.datadogTraces.protocol }}
+            {{- end }}
+            {{- if .Values.ports.dogstatsd.enabled }}
+            - name: dogstatsd
+              containerPort: {{ .Values.ports.dogstatsd.containerPort }}
+              protocol: {{ .Values.ports.dogstatsd.protocol }}
+            {{- end }}
+            {{- if .Values.ports.otlpGrpc.enabled }}
+            - name: otlp-grpc
+              containerPort: {{ .Values.ports.otlpGrpc.containerPort }}
+              protocol: {{ .Values.ports.otlpGrpc.protocol }}
+            {{- end }}
+            {{- if .Values.ports.otlpHttp.enabled }}
+            - name: otlp-http
+              containerPort: {{ .Values.ports.otlpHttp.containerPort }}
+              protocol: {{ .Values.ports.otlpHttp.protocol }}
+            {{- end }}
+          volumeMounts:
+            - name: config
+              mountPath: /etc/dogbridge
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "dogbridge.fullname" . }}-config
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}
