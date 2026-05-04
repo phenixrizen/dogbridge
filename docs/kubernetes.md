@@ -71,4 +71,4 @@ For a cluster-level test:
 ## Remaining placeholders
 
 - No bundled kind/minikube orchestration script yet.
-- Helm chart templates are still scaffold-level and will be productionized in Phase 4.
+- Helm chart now supports deployment and daemonset modes with RBAC, service, and collector config map wiring.

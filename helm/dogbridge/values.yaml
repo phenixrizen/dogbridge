@@ -4,10 +4,59 @@ image:
   pullPolicy: IfNotPresent
 
 mode: deployment
-replicaCount: 3
+replicaCount: 2
+
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  name: ""
+
+rbac:
+  create: true
+
+podAnnotations: {}
+
+resources: {}
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
 
 ports:
   datadogTraces: { enabled: true, containerPort: 8126, servicePort: 8126, protocol: TCP }
   dogstatsd: { enabled: true, containerPort: 8125, servicePort: 8125, protocol: UDP }
   otlpGrpc: { enabled: true, containerPort: 4317, servicePort: 4317, protocol: TCP }
   otlpHttp: { enabled: true, containerPort: 4318, servicePort: 4318, protocol: TCP }
+
+service:
+  type: ClusterIP
+
+config:
+  content: |
+    receivers:
+      datadog:
+        endpoint: 0.0.0.0:8126
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317
+          http:
+            endpoint: 0.0.0.0:4318
+
+    processors:
+      batch: {}
+
+    exporters:
+      debug:
+        verbosity: detailed
+
+    service:
+      pipelines:
+        traces:
+          receivers: [datadog, otlp]
+          processors: [batch]
+          exporters: [debug]

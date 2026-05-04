@@ -16,7 +16,7 @@ Not implemented yet (planned phases):
 
 - DogStatsD metrics pipeline and VictoriaMetrics flow.
 - Kubernetes logs pipeline and Loki/OpenSearch flows.
-- Production-grade Helm chart templates and hardening.
+- Additional Helm hardening for production operations (PDB/HPA/securityContext defaults).
 
 ## Quickstart: Datadog traces to Tempo
 
