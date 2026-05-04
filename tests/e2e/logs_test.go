@@ -1,5 +1,51 @@
 package e2e
 
-import "testing"
+import (
+	"os"
+	"strings"
+	"testing"
+)
 
-func TestLogsPipelinePlaceholder(t *testing.T) {}
+func TestLogsPipelineLokiConfig(t *testing.T) {
+	cfgBytes, err := os.ReadFile("../../config/examples/logs-to-loki.yaml")
+	if err != nil {
+		t.Fatalf("read loki logs config: %v", err)
+	}
+
+	cfg := string(cfgBytes)
+	requiredSnippets := []string{
+		"filelog:",
+		"type: trace_parser",
+		"k8sattributes:",
+		"k8s.namespace.name",
+		"loki:",
+	}
+
+	for _, snippet := range requiredSnippets {
+		if !strings.Contains(cfg, snippet) {
+			t.Fatalf("logs-to-loki config missing required snippet %q", snippet)
+		}
+	}
+}
+
+func TestLogsPipelineOpenSearchConfig(t *testing.T) {
+	cfgBytes, err := os.ReadFile("../../config/examples/logs-to-opensearch.yaml")
+	if err != nil {
+		t.Fatalf("read opensearch logs config: %v", err)
+	}
+
+	cfg := string(cfgBytes)
+	requiredSnippets := []string{
+		"filelog:",
+		"type: trace_parser",
+		"k8sattributes:",
+		"elasticsearch:",
+		"logs_index: dogbridge-logs",
+	}
+
+	for _, snippet := range requiredSnippets {
+		if !strings.Contains(cfg, snippet) {
+			t.Fatalf("logs-to-opensearch config missing required snippet %q", snippet)
+		}
+	}
+}
