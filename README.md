@@ -1,53 +1,40 @@
 # dogbridge
 
-`dogbridge` is a self-hosted Datadog-compatible telemetry ingestion gateway built on OpenTelemetry Collector.
+`dogbridge` is an opinionated OpenTelemetry Collector distribution for teams migrating off Datadog agents and proprietary backends.
 
-It accepts Datadog-style APM traces, DogStatsD metrics, OTLP telemetry, Prometheus scrapes, and Kubernetes logs, then exports them to open-source observability backends such as Tempo, Jaeger, VictoriaMetrics, Mimir, Prometheus, Loki, OpenSearch, Elasticsearch, and Pyroscope.
+## Current state (May 2026)
 
-This repository provides an opinionated OpenTelemetry Collector distribution, deployment manifests, examples, and migration documentation for teams moving from Datadog-specific clients to OpenTelemetry-native instrumentation.
+Implemented in this scaffold:
 
-## Goals
+- Runnable collector entrypoint in `cmd/dogbridge` wired with component factories.
+- Trace ingestion via Datadog APM (`:8126`) and OTLP (`:4317`/`:4318`).
+- Trace export to OTLP backends (Tempo demo included).
+- Local docker-compose demo with dogbridge + Tempo + Grafana.
+- Smoke script that sends one `dd-trace-go` trace and verifies it is queryable in Tempo.
 
-- Keep existing Datadog-style app settings (`DD_TRACE_AGENT_URL`, `DD_AGENT_HOST`, `DD_DOGSTATSD_PORT`) working during migration.
-- Convert telemetry through OTel Collector pipelines.
-- Export to open-source backends with sensible defaults.
-- Encourage a long-term move to native OTel SDKs and OTLP.
+Not implemented yet (planned phases):
 
-## MVPs
+- DogStatsD metrics pipeline and VictoriaMetrics flow.
+- Kubernetes logs pipeline and Loki/OpenSearch flows.
+- Production-grade Helm chart templates and hardening.
 
-1. Datadog traces (`:8126`) to Tempo/Jaeger.
-2. DogStatsD metrics (`:8125/udp`) to Prometheus remote write backends.
-3. Kubernetes logs (`filelog`) to Loki/OpenSearch/Elasticsearch.
+## Quickstart: Datadog traces to Tempo
 
-## Repository Layout
-
-```text
-cmd/dogbridge/                Collector entrypoint
-distro/components.go          Collector component registration
-config/examples/              Ready-to-run pipeline examples
-helm/dogbridge/               Helm chart for deployment/daemonset modes
-docs/                         Architecture, migration, compatibility docs
-examples/                     Go examples and local docker-compose demo
-tests/e2e/                    End-to-end placeholder tests
+```bash
+cd examples/docker-compose
+docker compose up -d
+./smoke-traces.sh
 ```
 
-## Default Ports
+If the smoke test succeeds, Tempo search API returns at least one trace ID for service `dogbridge-ddtrace-demo`.
 
-| Signal | Protocol | Port |
-|---|---:|---:|
-| Datadog traces | HTTP | 8126 |
-| DogStatsD metrics | UDP | 8125 |
-| OTLP gRPC | gRPC | 4317 |
-| OTLP HTTP | HTTP | 4318 |
-| Health check | HTTP | 13133 |
-| Prometheus scrape endpoint | HTTP | 8888 |
+## Repository layout
 
-## Quick Start
-
-- Use `config/examples/traces-to-tempo.yaml` for MVP 1.
-- Use `config/examples/metrics-to-victoriametrics.yaml` for MVP 2.
-- Use `config/examples/logs-to-loki.yaml` for MVP 3.
-- Use `examples/docker-compose/` for a local all-in-one stack.
+- `cmd/dogbridge`: collector binary entrypoint.
+- `distro/components.go`: enabled receivers/processors/exporters and build settings.
+- `examples/docker-compose`: local end-to-end demo stack.
+- `examples/go-ddtrace`: simple trace emitter.
+- `config/examples`: standalone configuration examples.
 
 ## License
 

@@ -1,1 +1,35 @@
-# placeholder config
+receivers:
+  datadog:
+    endpoint: 0.0.0.0:8126
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 512
+  resource:
+    attributes:
+      - key: telemetry.gateway
+        value: dogbridge
+        action: upsert
+  batch:
+    timeout: 1s
+    send_batch_size: 1024
+
+exporters:
+  otlp:
+    endpoint: tempo:4317
+    tls:
+      insecure: true
+
+service:
+  pipelines:
+    traces:
+      receivers: [datadog, otlp]
+      processors: [memory_limiter, resource, batch]
+      exporters: [otlp]
