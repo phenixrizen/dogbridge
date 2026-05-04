@@ -1,0 +1,84 @@
+receivers:
+  datadog:
+    endpoint: 0.0.0.0:8126
+  statsd:
+    endpoint: 0.0.0.0:8125
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 1024
+    spike_limit_mib: 256
+  resource:
+    attributes:
+      - key: telemetry.gateway
+        value: dogbridge
+        action: upsert
+  batch:
+    timeout: 2s
+    send_batch_size: 2048
+    send_batch_max_size: 4096
+
+exporters:
+  otlp/tempo:
+    endpoint: tempo.monitoring.svc.cluster.local:4317
+    timeout: 10s
+    tls:
+      insecure: true
+    sending_queue:
+      enabled: true
+      num_consumers: 8
+      queue_size: 10000
+    retry_on_failure:
+      enabled: true
+      initial_interval: 1s
+      max_interval: 30s
+      max_elapsed_time: 300s
+  prometheusremotewrite:
+    endpoint: http://victoriametrics.monitoring.svc.cluster.local:8428/api/v1/write
+    timeout: 10s
+    sending_queue:
+      enabled: true
+      num_consumers: 8
+      queue_size: 10000
+    retry_on_failure:
+      enabled: true
+      initial_interval: 1s
+      max_interval: 30s
+      max_elapsed_time: 300s
+  loki:
+    endpoint: http://loki.monitoring.svc.cluster.local:3100/loki/api/v1/push
+    timeout: 10s
+    sending_queue:
+      enabled: true
+      num_consumers: 8
+      queue_size: 10000
+    retry_on_failure:
+      enabled: true
+      initial_interval: 1s
+      max_interval: 30s
+      max_elapsed_time: 300s
+
+service:
+  telemetry:
+    metrics:
+      address: 0.0.0.0:8888
+  pipelines:
+    traces:
+      receivers: [datadog, otlp]
+      processors: [memory_limiter, resource, batch]
+      exporters: [otlp/tempo]
+    metrics:
+      receivers: [statsd, otlp]
+      processors: [memory_limiter, resource, batch]
+      exporters: [prometheusremotewrite]
+    logs:
+      receivers: [otlp]
+      processors: [memory_limiter, resource, batch]
+      exporters: [loki]
