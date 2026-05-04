@@ -1,6 +1,32 @@
 version: "3.9"
 services:
   dogbridge:
-    image: ghcr.io/your-org/dogbridge:latest
+    image: otel/opentelemetry-collector-contrib:0.125.0
     command: ["--config=/etc/dogbridge/config.yaml"]
-    ports: ["8126:8126", "8125:8125/udp", "4317:4317", "4318:4318"]
+    volumes:
+      - ./dogbridge.yaml:/etc/dogbridge/config.yaml:ro
+    ports:
+      - "8126:8126"
+      - "4317:4317"
+      - "4318:4318"
+    depends_on:
+      - tempo
+
+  tempo:
+    image: grafana/tempo:2.8.0
+    command: ["-config.file=/etc/tempo.yaml"]
+    volumes:
+      - ./tempo.yaml:/etc/tempo.yaml:ro
+    ports:
+      - "3200:3200"
+      - "4319:4317"
+
+  grafana:
+    image: grafana/grafana:11.6.0
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    depends_on:
+      - tempo
