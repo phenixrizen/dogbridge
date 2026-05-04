@@ -12,10 +12,13 @@ import (
 	"go.opentelemetry.io/collector/otelcol"
 
 	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/otlpexporter"
+	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/prometheusremotewriteexporter"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/memorylimiterprocessor"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/resourceprocessor"
+	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/transformprocessor"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/receiver/datadogreceiver"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/receiver/otlpreceiver"
+	"github.com/open-telemetry/opentelemetry-collector-contrib/receiver/statsdreceiver"
 	"go.opentelemetry.io/collector/processor/batchprocessor"
 )
 
@@ -27,11 +30,14 @@ var BuildInfo = component.BuildInfo{
 
 var Factories, _ = otelcol.MakeFactoryMap(
 	datadogreceiver.NewFactory(),
+	statsdreceiver.NewFactory(),
 	otlpreceiver.NewFactory(),
 	memorylimiterprocessor.NewFactory(),
 	resourceprocessor.NewFactory(),
+	transformprocessor.NewFactory(),
 	batchprocessor.NewFactory(),
 	otlpexporter.NewFactory(),
+	prometheusremotewriteexporter.NewFactory(),
 )
 
 var ResolverSettings = confmap.ResolverSettings{

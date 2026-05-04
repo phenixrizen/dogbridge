@@ -1,6 +1,8 @@
 receivers:
   datadog:
     endpoint: 0.0.0.0:8126
+  statsd:
+    endpoint: 0.0.0.0:8125
   otlp:
     protocols:
       grpc:
@@ -17,6 +19,22 @@ processors:
       - key: telemetry.gateway
         value: dogbridge
         action: upsert
+  transform/drop_default_high_cardinality:
+    metric_statements:
+      - context: datapoint
+        statements:
+          - delete_key(attributes, "claim_id")
+          - delete_key(attributes, "raw_claim_id")
+          - delete_key(attributes, "trace_id")
+          - delete_key(attributes, "span_id")
+          - delete_key(attributes, "request_id")
+  transform/label_controls:
+    error_mode: ignore
+    metric_statements:
+      - context: datapoint
+        statements:
+          - keep_matching_keys(attributes, "${env:DOGBRIDGE_METRICS_LABEL_ALLOW_REGEX:.*}")
+          - delete_matching_keys(attributes, "${env:DOGBRIDGE_METRICS_LABEL_DENY_REGEX:^$}")
   batch:
     timeout: 1s
     send_batch_size: 1024
@@ -26,6 +44,8 @@ exporters:
     endpoint: tempo:4317
     tls:
       insecure: true
+  prometheusremotewrite:
+    endpoint: http://victoriametrics:8428/api/v1/write
 
 service:
   pipelines:
@@ -33,3 +53,7 @@ service:
       receivers: [datadog, otlp]
       processors: [memory_limiter, resource, batch]
       exporters: [otlp]
+    metrics:
+      receivers: [statsd]
+      processors: [memory_limiter, resource, transform/drop_default_high_cardinality, transform/label_controls, batch]
+      exporters: [prometheusremotewrite]
