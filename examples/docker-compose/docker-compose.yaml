@@ -1,0 +1,6 @@
+version: "3.9"
+services:
+  dogbridge:
+    image: ghcr.io/your-org/dogbridge:latest
+    command: ["--config=/etc/dogbridge/config.yaml"]
+    ports: ["8126:8126", "8125:8125/udp", "4317:4317", "4318:4318"]

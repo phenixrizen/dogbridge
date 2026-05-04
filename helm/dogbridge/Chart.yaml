@@ -1,0 +1,6 @@
+apiVersion: v2
+name: dogbridge
+description: Datadog-compatible ingestion gateway built on OpenTelemetry Collector
+type: application
+version: 0.1.0
+appVersion: 0.1.0

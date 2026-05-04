@@ -1,0 +1,13 @@
+image:
+  repository: ghcr.io/your-org/dogbridge
+  tag: latest
+  pullPolicy: IfNotPresent
+
+mode: deployment
+replicaCount: 3
+
+ports:
+  datadogTraces: { enabled: true, containerPort: 8126, servicePort: 8126, protocol: TCP }
+  dogstatsd: { enabled: true, containerPort: 8125, servicePort: 8125, protocol: UDP }
+  otlpGrpc: { enabled: true, containerPort: 4317, servicePort: 4317, protocol: TCP }
+  otlpHttp: { enabled: true, containerPort: 4318, servicePort: 4318, protocol: TCP }

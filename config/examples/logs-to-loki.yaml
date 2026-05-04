@@ -1,0 +1,26 @@
+receivers:
+  filelog:
+    include:
+      - /var/log/pods/*/*/*.log
+    start_at: end
+    operators:
+      - type: container
+      - type: json_parser
+        if: 'body matches "^\\{"'
+        parse_from: body
+
+processors:
+  k8sattributes:
+    auth_type: serviceAccount
+  batch: {}
+
+exporters:
+  loki:
+    endpoint: http://loki.monitoring.svc.cluster.local:3100/loki/api/v1/push
+
+service:
+  pipelines:
+    logs:
+      receivers: [filelog]
+      processors: [k8sattributes, batch]
+      exporters: [loki]
