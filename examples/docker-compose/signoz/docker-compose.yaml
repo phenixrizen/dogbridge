@@ -1,0 +1,24 @@
+version: "3.9"
+services:
+  dogbridge:
+    image: otel/opentelemetry-collector-contrib:0.138.0
+    command: ["--config=/etc/dogbridge/config.yaml"]
+    volumes:
+      - ./dogbridge-signoz.yaml:/etc/dogbridge/config.yaml:ro
+    ports:
+      - "8126:8126"
+      - "4317:4317"
+      - "4318:4318"
+    depends_on:
+      - signoz-otel-collector
+
+  signoz-otel-collector:
+    image: signoz/signoz-otel-collector:0.111.36
+    ports:
+      - "4319:4317"
+      - "4320:4318"
+
+  signoz-frontend:
+    image: signoz/frontend:0.71.0
+    ports:
+      - "3301:3301"

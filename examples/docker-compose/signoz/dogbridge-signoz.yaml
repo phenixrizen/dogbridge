@@ -1,0 +1,25 @@
+receivers:
+  datadog:
+    endpoint: 0.0.0.0:8126
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch:
+
+exporters:
+  otlp:
+    endpoint: signoz-otel-collector:4317
+    tls:
+      insecure: true
+
+service:
+  pipelines:
+    traces:
+      receivers: [datadog, otlp]
+      processors: [batch]
+      exporters: [otlp]

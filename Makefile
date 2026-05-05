@@ -1,0 +1,52 @@
+SHELL := /bin/bash
+
+COMPOSE_FILE := examples/docker-compose/docker-compose.yaml
+SIGNOZ_COMPOSE_FILE := examples/docker-compose/signoz/docker-compose.yaml
+
+.PHONY: help build test fmt demo-up demo-down demo-smoke-traces demo-smoke-metrics demo-signoz-up demo-signoz-down demo-signoz-smoke
+
+help:
+	@echo "dogbridge targets"
+	@echo "  build               Build dogbridge binary"
+	@echo "  test                Run go tests"
+	@echo "  fmt                 Run go fmt"
+	@echo "  demo-up             Start Tempo demo stack"
+	@echo "  demo-down           Stop Tempo demo stack"
+	@echo "  demo-smoke-traces   Run dd-trace smoke test against Tempo demo"
+	@echo "  demo-smoke-metrics  Run statsd smoke test against Tempo demo"
+	@echo "  demo-signoz-up      Start SigNoz demo stack"
+	@echo "  demo-signoz-down    Stop SigNoz demo stack"
+	@echo "  demo-signoz-smoke   Run dd-trace smoke test against SigNoz demo"
+
+build:
+	go build ./cmd/dogbridge
+
+test:
+	go test ./...
+
+fmt:
+	go fmt ./...
+
+demo-up:
+	docker compose -f $(COMPOSE_FILE) up -d
+	@echo "Grafana: http://localhost:3000 (admin/admin)"
+
+
+demo-down:
+	docker compose -f $(COMPOSE_FILE) down -v
+
+demo-smoke-traces:
+	bash examples/docker-compose/smoke-traces.sh
+
+demo-smoke-metrics:
+	bash examples/docker-compose/smoke-metrics.sh
+
+demo-signoz-up:
+	docker compose -f $(SIGNOZ_COMPOSE_FILE) up -d
+	@echo "SigNoz: http://localhost:3301"
+
+demo-signoz-down:
+	docker compose -f $(SIGNOZ_COMPOSE_FILE) down -v
+
+demo-signoz-smoke:
+	DOGBRIDGE_ENDPOINT=http://localhost:8126 bash examples/docker-compose/signoz/smoke-traces-signoz.sh
