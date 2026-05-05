@@ -1,40 +1,104 @@
 # dogbridge
 
-`dogbridge` is an opinionated OpenTelemetry Collector distribution for teams migrating off Datadog agents and proprietary backends.
+`dogbridge` is an opinionated OpenTelemetry Collector distribution for teams migrating from Datadog ingestion paths to open backends.
 
-## Current state (May 2026)
+## What works now (May 2026)
 
-Implemented in this scaffold:
+- Runnable collector entrypoint in `cmd/dogbridge`.
+- Datadog APM trace ingest on `:8126` and OTLP ingest on `:4317/:4318`.
+- Trace forwarding to OTLP backends (Tempo demo and SigNoz demo configs included).
+- DogStatsD ingest and Prometheus remote write example in the Tempo compose config.
+- Local smoke tests for traces and metrics.
 
-- Runnable collector entrypoint in `cmd/dogbridge` wired with component factories.
-- Trace ingestion via Datadog APM (`:8126`) and OTLP (`:4317`/`:4318`).
-- Trace export to OTLP backends (Tempo demo included).
-- Local docker-compose demo with dogbridge + Tempo + Grafana.
-- Smoke script that sends one `dd-trace-go` trace and verifies it is queryable in Tempo.
+## Architecture
 
-Not implemented yet (planned phases):
-
-- DogStatsD metrics pipeline and VictoriaMetrics flow.
-- Kubernetes logs pipeline and Loki/OpenSearch flows.
-- Additional Helm hardening for production operations (PDB/HPA/securityContext defaults).
-
-## Quickstart: Datadog traces to Tempo
-
-```bash
-cd examples/docker-compose
-docker compose up -d
-./smoke-traces.sh
+```mermaid
+flowchart LR
+    A[dd-trace-go] --> B[dogbridge datadogreceiver :8126]
+    C[OTLP clients] --> D[dogbridge otlpreceiver :4317/:4318]
+    B --> E[processors: memory_limiter/resource/batch]
+    D --> E
+    E --> F[OTLP exporter]
+    F --> G[Tempo]
 ```
 
-If the smoke test succeeds, Tempo search API returns at least one trace ID for service `dogbridge-ddtrace-demo`.
+```mermaid
+flowchart TB
+    subgraph Ingress
+      DD[Datadog APM]
+      DS[DogStatsD]
+      OTLP[OTLP]
+    end
+
+    subgraph dogbridge
+      R[Receivers]
+      P[Processors]
+      X[Exporters]
+    end
+
+    subgraph Backends
+      T[Tempo]
+      VM[VictoriaMetrics]
+      SN[SigNoz]
+    end
+
+    DD --> R
+    DS --> R
+    OTLP --> R
+    R --> P --> X
+    X --> T
+    X --> VM
+    X --> SN
+```
+
+## Quickstart (Tempo demo)
+
+```bash
+make demo-up
+make demo-smoke-traces
+```
+
+Expected result: smoke test reports a trace id queryable via Tempo APIs.
+
+## Quickstart (SigNoz demo)
+
+```bash
+make demo-signoz-up
+make demo-signoz-smoke
+```
+
+Then open SigNoz at `http://localhost:3301`.
+
+## CLI usage
+
+```bash
+# default run
+./dogbridge
+
+# explicit config
+./dogbridge run --config examples/docker-compose/dogbridge.yaml
+
+# inline override
+./dogbridge run --config examples/docker-compose/dogbridge.yaml --set exporters::otlp::endpoint:tempo:4317
+
+# version
+./dogbridge version
+```
 
 ## Repository layout
 
-- `cmd/dogbridge`: collector binary entrypoint.
-- `distro/components.go`: enabled receivers/processors/exporters and build settings.
-- `examples/docker-compose`: local end-to-end demo stack.
-- `examples/go-ddtrace`: simple trace emitter.
-- `config/examples`: standalone configuration examples.
+- `cmd/dogbridge`: cobra CLI + collector execution.
+- `distro/components.go`: enabled collector factories and resolver settings.
+- `examples/docker-compose`: local Tempo demo.
+- `examples/docker-compose/signoz`: local SigNoz demo.
+- `config/examples`: standalone OTel config examples.
+
+## Planned next phases
+
+- Kubernetes logs pipeline and operational hardening.
+- Compatibility matrix and migration playbooks expansion.
+
+See `IMPLEMENTATION_PLAN.md` for milestone details.
 
 ## License
 
