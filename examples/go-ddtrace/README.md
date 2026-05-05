@@ -1,6 +1,10 @@
 # go-ddtrace
 
-This example emits one Datadog APM trace using `dd-trace-go` to a Datadog-compatible ingestion endpoint.
+This demo emits **Datadog spans, metrics, and event-style logs** continuously to dogbridge using Datadog Go libraries:
+
+- Spans via `dd-trace-go`
+- Metrics via DogStatsD metric packets
+- Log-like events via DogStatsD events
 
 ## Run
 
@@ -12,3 +16,4 @@ go run .
 Environment variables:
 
 - `DD_TRACE_AGENT_URL` (default: `http://localhost:8126`)
+- `DD_DOGSTATSD_ADDR` (default: `localhost:8125`)
