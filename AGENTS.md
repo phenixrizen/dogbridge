@@ -17,6 +17,12 @@ This repository is in an early scaffold phase. Prefer incremental, runnable prog
 5. For new Go code, run `go test ./...` before finalizing.
 6. For Helm changes, run `helm lint helm/dogbridge` when Helm is available.
 
+## Dependency and component guidance
+- Use the latest stable OpenTelemetry Collector release line unless a task explicitly requires an older pin.
+- When importing Collector components directly, depend on the component submodules in `go.mod`; do not rely on umbrella modules to supply component packages.
+- Do not reintroduce the deprecated OpenTelemetry `lokiexporter`. Send logs to Loki through the stable `otlphttp` exporter and Loki's OTLP ingestion endpoint.
+- After dependency or Collector component changes, run `go mod tidy` and `go test ./...`.
+
 ## Near-term priorities
 - Implement a runnable collector binary using OTel Collector builder/factories.
 - Provide one end-to-end local demo (dd-trace-go -> dogbridge -> tempo).

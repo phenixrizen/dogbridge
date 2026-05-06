@@ -10,7 +10,7 @@ services:
       - dogbridge
 
   dogbridge:
-    image: otel/opentelemetry-collector-contrib:0.125.0
+    image: otel/opentelemetry-collector-contrib:0.151.0
     command: ["--config=/etc/dogbridge/config.yaml"]
     volumes:
       - ./dogbridge.yaml:/etc/dogbridge/config.yaml:ro
