@@ -6,6 +6,7 @@ services:
     environment:
       - DD_TRACE_AGENT_URL=http://dogbridge:8126
       - DD_DOGSTATSD_ADDR=dogbridge:8125
+      - DOGBRIDGE_OTLP_LOGS_ENDPOINT=http://dogbridge:4318/v1/logs
     depends_on:
       - dogbridge
 

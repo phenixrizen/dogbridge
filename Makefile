@@ -42,7 +42,7 @@ demo-smoke-metrics:
 	bash examples/docker-compose/smoke-metrics.sh
 
 demo-signoz-up:
-	docker compose -f $(SIGNOZ_COMPOSE_FILE) up -d
+	docker compose -f $(SIGNOZ_COMPOSE_FILE) up -d --remove-orphans
 	@echo "SigNoz: http://localhost:3301"
 
 demo-signoz-down:
