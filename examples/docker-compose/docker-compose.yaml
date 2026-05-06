@@ -1,7 +1,17 @@
 version: "3.9"
 services:
+  demo-emitter:
+    build:
+      context: ../go-ddtrace
+    environment:
+      - DD_TRACE_AGENT_URL=http://dogbridge:8126
+      - DD_DOGSTATSD_ADDR=dogbridge:8125
+      - DOGBRIDGE_OTLP_LOGS_ENDPOINT=http://dogbridge:4318/v1/logs
+    depends_on:
+      - dogbridge
+
   dogbridge:
-    image: otel/opentelemetry-collector-contrib:0.125.0
+    image: otel/opentelemetry-collector-contrib:0.151.0
     command: ["--config=/etc/dogbridge/config.yaml"]
     volumes:
       - ./dogbridge.yaml:/etc/dogbridge/config.yaml:ro

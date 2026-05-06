@@ -1,7 +1,100 @@
-version: "3.9"
 services:
+  zookeeper-1:
+    image: signoz/zookeeper:3.7.1
+    user: root
+    environment:
+      - ZOO_SERVER_ID=1
+      - ALLOW_ANONYMOUS_LOGIN=yes
+      - ZOO_AUTOPURGE_INTERVAL=1
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s -m 2 http://localhost:8080/commands/ruok | grep error | grep null"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    volumes:
+      - zookeeper-1:/bitnami/zookeeper
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:25.5.6
+    environment:
+      - CLICKHOUSE_SKIP_USER_SETUP=1
+    depends_on:
+      zookeeper-1:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "0.0.0.0:8123/ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    volumes:
+      - ./clickhouse-cluster.xml:/etc/clickhouse-server/config.d/cluster.xml:ro
+      - clickhouse:/var/lib/clickhouse
+
+  signoz:
+    image: signoz/signoz:v0.122.0
+    environment:
+      - SIGNOZ_ALERTMANAGER_PROVIDER=signoz
+      - SIGNOZ_TELEMETRYSTORE_CLICKHOUSE_DSN=tcp://clickhouse:9000
+      - SIGNOZ_SQLSTORE_SQLITE_PATH=/var/lib/signoz/signoz.db
+      - SIGNOZ_TOKENIZER_JWT_SECRET=dogbridge-demo-secret
+    ports:
+      - "3301:8080"
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+    volumes:
+      - signoz-sqlite:/var/lib/signoz
+
+  signoz-telemetrystore-migrator:
+    image: signoz/signoz-otel-collector:v0.144.3
+    environment:
+      - SIGNOZ_OTEL_COLLECTOR_CLICKHOUSE_DSN=tcp://clickhouse:9000
+      - SIGNOZ_OTEL_COLLECTOR_CLICKHOUSE_CLUSTER=cluster
+      - SIGNOZ_OTEL_COLLECTOR_CLICKHOUSE_REPLICATION=true
+      - SIGNOZ_OTEL_COLLECTOR_TIMEOUT=10m
+    entrypoint:
+      - /bin/sh
+    command:
+      - -c
+      - |
+        /signoz-otel-collector migrate bootstrap &&
+        /signoz-otel-collector migrate sync up &&
+        /signoz-otel-collector migrate async up
+    restart: on-failure
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+
+  signoz-otel-collector:
+    image: signoz/signoz-otel-collector:v0.144.3
+    entrypoint:
+      - /bin/sh
+    command:
+      - -c
+      - |
+        /signoz-otel-collector migrate sync check &&
+        /signoz-otel-collector --config=/etc/otel-collector-config.yaml --manager-config=/etc/manager-config.yaml --copy-path=/var/tmp/collector-config.yaml
+    environment:
+      - OTEL_RESOURCE_ATTRIBUTES=host.name=signoz-host,os.type=linux
+      - LOW_CARDINAL_EXCEPTION_GROUPING=false
+      - SIGNOZ_OTEL_COLLECTOR_CLICKHOUSE_DSN=tcp://clickhouse:9000
+      - SIGNOZ_OTEL_COLLECTOR_CLICKHOUSE_CLUSTER=cluster
+      - SIGNOZ_OTEL_COLLECTOR_CLICKHOUSE_REPLICATION=true
+      - SIGNOZ_OTEL_COLLECTOR_TIMEOUT=10m
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml:ro
+      - ./otel-collector-opamp-config.yaml:/etc/manager-config.yaml:ro
+    ports:
+      - "4319:4317"
+      - "4320:4318"
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+      signoz-telemetrystore-migrator:
+        condition: service_completed_successfully
+
   dogbridge:
-    image: otel/opentelemetry-collector-contrib:0.138.0
+    image: otel/opentelemetry-collector-contrib:0.151.0
     command: ["--config=/etc/dogbridge/config.yaml"]
     volumes:
       - ./dogbridge-signoz.yaml:/etc/dogbridge/config.yaml:ro
@@ -10,15 +103,10 @@ services:
       - "4317:4317"
       - "4318:4318"
     depends_on:
-      - signoz-otel-collector
+      signoz-otel-collector:
+        condition: service_started
 
-  signoz-otel-collector:
-    image: signoz/signoz-otel-collector:0.111.36
-    ports:
-      - "4319:4317"
-      - "4320:4318"
-
-  signoz-frontend:
-    image: signoz/frontend:0.71.0
-    ports:
-      - "3301:3301"
+volumes:
+  clickhouse:
+  signoz-sqlite:
+  zookeeper-1:

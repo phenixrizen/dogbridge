@@ -18,7 +18,8 @@ func TestLogsPipelineLokiConfig(t *testing.T) {
 		"type: trace_parser",
 		"k8sattributes:",
 		"k8s.namespace.name",
-		"loki:",
+		"otlphttp/loki:",
+		"endpoint: http://loki.monitoring.svc.cluster.local:3100/otlp",
 	}
 
 	for _, snippet := range requiredSnippets {
