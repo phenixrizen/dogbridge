@@ -2,8 +2,9 @@ SHELL := /bin/bash
 
 COMPOSE_FILE := examples/docker-compose/docker-compose.yaml
 SIGNOZ_COMPOSE_FILE := examples/docker-compose/signoz/docker-compose.yaml
+OPENOBSERVE_COMPOSE_FILE := examples/docker-compose/openobserve/docker-compose.yaml
 
-.PHONY: help build test fmt demo-up demo-down demo-smoke-traces demo-smoke-metrics demo-signoz-up demo-signoz-down demo-signoz-smoke
+.PHONY: help build test fmt demo-up demo-down demo-smoke-traces demo-smoke-metrics demo-signoz-up demo-signoz-down demo-signoz-smoke demo-openobserve-up demo-openobserve-down demo-openobserve-smoke
 
 help:
 	@echo "dogbridge targets"
@@ -17,6 +18,9 @@ help:
 	@echo "  demo-signoz-up      Start SigNoz demo stack"
 	@echo "  demo-signoz-down    Stop SigNoz demo stack"
 	@echo "  demo-signoz-smoke   Run dd-trace smoke test against SigNoz demo"
+	@echo "  demo-openobserve-up    Start OpenObserve demo stack"
+	@echo "  demo-openobserve-down  Stop OpenObserve demo stack"
+	@echo "  demo-openobserve-smoke Run dd-trace smoke test against OpenObserve demo"
 
 build:
 	go build ./cmd/dogbridge
@@ -50,3 +54,13 @@ demo-signoz-down:
 
 demo-signoz-smoke:
 	DOGBRIDGE_ENDPOINT=http://localhost:8126 bash examples/docker-compose/signoz/smoke-traces-signoz.sh
+
+demo-openobserve-up:
+	docker compose -f $(OPENOBSERVE_COMPOSE_FILE) up -d --remove-orphans
+	@echo "OpenObserve: http://localhost:5080 (root@example.com / Complexpass#123)"
+
+demo-openobserve-down:
+	docker compose -f $(OPENOBSERVE_COMPOSE_FILE) down -v
+
+demo-openobserve-smoke:
+	bash examples/docker-compose/openobserve/smoke-openobserve.sh
