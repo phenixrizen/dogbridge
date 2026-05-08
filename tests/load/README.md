@@ -1,4 +1,4 @@
-# Load scenarios (Phase 5)
+# Load Scenarios
 
 These scripts exercise dogbridge signal pipelines independently through OTLP/HTTP.
 

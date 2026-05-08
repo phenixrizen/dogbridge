@@ -15,8 +15,8 @@ Status legend:
 |---|---|---|---|---|
 | APM traces (`dd-trace-*`) | `8126` HTTP | Traces | **Supported** | Ingested via OTel Datadog receiver and exported as OTLP traces. |
 | OTLP (`otel-sdk-*`) | `4317` gRPC, `4318` HTTP | Traces | **Supported** | Native OTel path for migration end-state. |
-| DogStatsD metrics | `8125` UDP | Metrics | **Planned** | Phase 2 target; not wired in current default demo config. |
-| Datadog logs intake | Datadog Agent/log endpoints | Logs | **Not supported** | Use OTel log collection path (`filelog`/OTLP) when logs phase is implemented. |
+| DogStatsD metrics | `8125` UDP | Metrics | **Supported** | Ingested via OTel StatsD receiver and exported in the Tempo, OpenObserve, and ClickStack demos. |
+| Datadog logs intake | Datadog Agent/log endpoints | Logs | **Not supported** | Use OTel log collection paths (`filelog`/OTLP); Datadog logs intake compatibility is not implemented. |
 
 ## Span/attribute compatibility
 
@@ -34,11 +34,11 @@ Status legend:
 2. **Retention/indexing model differs**: Datadog managed indexing rules and retention tiers do not automatically exist in OSS backends.
 3. **Derived telemetry differs**: Datadog-specific features (Watchdog/AI, some inferred services) are backend-specific and not reproduced by dogbridge.
 
-## Known limitations (current phase)
+## Known Limitations
 
-- Metrics migration path (DogStatsD -> Prometheus remote write) is not yet enabled by default.
-- Log migration path is not yet enabled in the local demo.
-- Compatibility guarantees are currently focused on trace ingestion and trace delivery.
+- Datadog logs intake endpoints are not implemented.
+- Log support is through OTLP/filelog-style OpenTelemetry paths, not Datadog Agent log forwarding.
+- Backend query languages and indexing behavior differ from Datadog and need backend-specific dashboard work.
 
 ## Recommended pilot validation checklist
 

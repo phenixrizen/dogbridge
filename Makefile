@@ -3,8 +3,9 @@ SHELL := /bin/bash
 COMPOSE_FILE := examples/docker-compose/docker-compose.yaml
 SIGNOZ_COMPOSE_FILE := examples/docker-compose/signoz/docker-compose.yaml
 OPENOBSERVE_COMPOSE_FILE := examples/docker-compose/openobserve/docker-compose.yaml
+CLICKSTACK_COMPOSE_FILE := examples/docker-compose/clickstack/docker-compose.yaml
 
-.PHONY: help build test fmt demo-up demo-down demo-smoke-traces demo-smoke-metrics demo-signoz-up demo-signoz-down demo-signoz-smoke demo-openobserve-up demo-openobserve-down demo-openobserve-smoke
+.PHONY: help build test fmt demo-up demo-down demo-smoke-traces demo-smoke-metrics demo-signoz-up demo-signoz-down demo-signoz-smoke demo-openobserve-up demo-openobserve-down demo-openobserve-smoke demo-clickstack-up demo-clickstack-down demo-clickstack-smoke
 
 help:
 	@echo "dogbridge targets"
@@ -21,6 +22,9 @@ help:
 	@echo "  demo-openobserve-up    Start OpenObserve demo stack"
 	@echo "  demo-openobserve-down  Stop OpenObserve demo stack"
 	@echo "  demo-openobserve-smoke Run dd-trace smoke test against OpenObserve demo"
+	@echo "  demo-clickstack-up     Start ClickStack/HyperDX demo stack"
+	@echo "  demo-clickstack-down   Stop ClickStack/HyperDX demo stack"
+	@echo "  demo-clickstack-smoke  Run dd-trace smoke test against ClickStack demo"
 
 build:
 	go build ./cmd/dogbridge
@@ -64,3 +68,13 @@ demo-openobserve-down:
 
 demo-openobserve-smoke:
 	bash examples/docker-compose/openobserve/smoke-openobserve.sh
+
+demo-clickstack-up:
+	docker compose -f $(CLICKSTACK_COMPOSE_FILE) up -d --remove-orphans
+	@echo "ClickStack / HyperDX: http://localhost:3401"
+
+demo-clickstack-down:
+	docker compose -f $(CLICKSTACK_COMPOSE_FILE) down -v
+
+demo-clickstack-smoke:
+	bash examples/docker-compose/clickstack/smoke-clickstack.sh

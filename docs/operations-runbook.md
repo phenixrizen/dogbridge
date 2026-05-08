@@ -1,4 +1,4 @@
-# Dogbridge operations runbook (Phase 5)
+# Dogbridge Operations Runbook
 
 This runbook documents production hardening defaults, backpressure behavior, and SRE operating guidance.
 
