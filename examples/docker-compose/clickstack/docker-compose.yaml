@@ -1,0 +1,43 @@
+services:
+  clickstack:
+    image: clickhouse/clickstack-all-in-one:2.19.0
+    ports:
+      - "3401:8080"
+    volumes:
+      - clickstack-clickhouse:/var/lib/clickhouse
+      - clickstack-mongo:/data/db
+
+  clickstack-otel-collector:
+    image: docker.clickhouse.com/clickhouse/clickstack-otel-collector:2.19.0
+    environment:
+      - CLICKHOUSE_ENDPOINT=tcp://clickstack:9000?dial_timeout=10s
+      - CLICKHOUSE_USER=api
+      - CLICKHOUSE_PASSWORD=api
+      - HYPERDX_OTEL_EXPORTER_CLICKHOUSE_DATABASE=default
+      - HYPERDX_LOG_LEVEL=info
+    ports:
+      - "5517:4317"
+      - "5518:4318"
+    depends_on:
+      clickstack:
+        condition: service_healthy
+
+  dogbridge:
+    image: otel/opentelemetry-collector-contrib:0.151.0
+    command: ["--config=/etc/dogbridge/config.yaml"]
+    environment:
+      - DOGBRIDGE_METRICS_LABEL_ALLOW_REGEX=.*
+      - DOGBRIDGE_METRICS_LABEL_DENY_REGEX=^$
+    volumes:
+      - ./dogbridge-clickstack.yaml:/etc/dogbridge/config.yaml:ro
+    ports:
+      - "9226:8126"
+      - "9225:8125/udp"
+      - "5417:4317"
+      - "5418:4318"
+    depends_on:
+      - clickstack-otel-collector
+
+volumes:
+  clickstack-clickhouse:
+  clickstack-mongo:

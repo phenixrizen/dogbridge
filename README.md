@@ -6,9 +6,10 @@
 
 - Runnable collector entrypoint in `cmd/dogbridge`.
 - Datadog APM trace ingest on `:8126` and OTLP ingest on `:4317/:4318`.
-- Trace forwarding to OTLP backends (Tempo demo and SigNoz demo configs included).
+- Trace forwarding to OTLP backends (Tempo, SigNoz, OpenObserve, and ClickStack demos included).
 - DogStatsD ingest and Prometheus remote write example in the Tempo compose config.
-- Local smoke tests for traces and metrics.
+- OTLP log forwarding in backend demos that support logs, with smoke coverage for trace/log correlation.
+- Local smoke tests for traces, metrics, and backend-specific log pipelines.
 
 ## Architecture
 
@@ -40,6 +41,8 @@ flowchart TB
       T[Tempo]
       VM[VictoriaMetrics]
       SN[SigNoz]
+      OO[OpenObserve]
+      CS[ClickStack / HyperDX]
     end
 
     DD --> R
@@ -49,6 +52,8 @@ flowchart TB
     X --> T
     X --> VM
     X --> SN
+    X --> OO
+    X --> CS
 ```
 
 ## Quickstart (Tempo demo)
@@ -68,6 +73,24 @@ make demo-signoz-smoke
 ```
 
 Then open SigNoz at `http://localhost:3301`.
+
+## Quickstart (OpenObserve demo)
+
+```bash
+make demo-openobserve-up
+make demo-openobserve-smoke
+```
+
+Then open OpenObserve at `http://localhost:5080` with `root@example.com / Complexpass#123`.
+
+## Quickstart (ClickStack / HyperDX demo)
+
+```bash
+make demo-clickstack-up
+make demo-clickstack-smoke
+```
+
+Then open the HyperDX UI at `http://localhost:3401`.
 
 ## CLI usage
 
@@ -91,14 +114,15 @@ Then open SigNoz at `http://localhost:3301`.
 - `distro/components.go`: enabled collector factories and resolver settings.
 - `examples/docker-compose`: local Tempo demo.
 - `examples/docker-compose/signoz`: local SigNoz demo.
+- `examples/docker-compose/openobserve`: local OpenObserve demo.
+- `examples/docker-compose/clickstack`: local ClickStack / HyperDX demo.
 - `config/examples`: standalone OTel config examples.
+- `docs/backends`: backend-specific notes and example exporter shapes.
 
-## Planned next phases
+## Next Work
 
 - Kubernetes logs pipeline and operational hardening.
 - Compatibility matrix and migration playbooks expansion.
-
-See `IMPLEMENTATION_PLAN.md` for milestone details.
 
 ## License
 

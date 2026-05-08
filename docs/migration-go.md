@@ -14,7 +14,7 @@ This guide is a practical migration path for Go services currently instrumented 
 - Current service inventory (service name, top endpoints, critical alerts).
 - Baseline trace/error/latency dashboards for comparison.
 
-## Phase A: Baseline with existing Datadog instrumentation
+## Step A: Baseline with existing Datadog instrumentation
 
 1. Keep existing `dd-trace-go` instrumentation in service.
 2. Point Datadog trace traffic at dogbridge (`:8126`) in lower environment.
@@ -25,15 +25,15 @@ Use the repository demo as an example of this mode:
 - `examples/go-ddtrace`
 - `examples/docker-compose/smoke-traces.sh`
 
-## Phase B: Add OTel instrumentation alongside legacy code (dual instrumentation window)
+## Step B: Add OTel instrumentation alongside legacy code
 
-> Keep this phase short. Dual instrumentation can create duplicate spans and higher overhead.
+> Keep this overlap window short. Dual instrumentation can create duplicate spans and higher overhead.
 
 1. Introduce OTel SDK and instrumentation in one low-risk endpoint path.
 2. Export OTLP to dogbridge while legacy `dd-trace-go` path remains enabled.
 3. Compare payload quality and field conventions (`service.name`, span names, status codes).
 
-## Phase C: Cut over to OTel-only
+## Step C: Cut over to OTel-only
 
 1. Disable `dd-trace-go` initialization and middleware.
 2. Keep OTel SDK + OTLP exporter.
@@ -136,7 +136,7 @@ func main() {
 
 ---
 
-## Phased rollout playbook
+## Staged Rollout Playbook
 
 1. **Single service pilot (Week 1)**
    - Choose one service with moderate traffic.

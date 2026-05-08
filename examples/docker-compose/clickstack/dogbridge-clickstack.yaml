@@ -1,0 +1,61 @@
+receivers:
+  datadog:
+    endpoint: 0.0.0.0:8126
+  statsd:
+    endpoint: 0.0.0.0:8125
+    aggregation_interval: 2s
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 512
+  resource:
+    attributes:
+      - key: telemetry.gateway
+        value: dogbridge
+        action: upsert
+  transform/drop_default_high_cardinality:
+    metric_statements:
+      - context: datapoint
+        statements:
+          - delete_key(datapoint.attributes, "claim_id")
+          - delete_key(datapoint.attributes, "raw_claim_id")
+          - delete_key(datapoint.attributes, "trace_id")
+          - delete_key(datapoint.attributes, "span_id")
+          - delete_key(datapoint.attributes, "request_id")
+  transform/label_controls:
+    error_mode: ignore
+    metric_statements:
+      - context: datapoint
+        statements:
+          - keep_matching_keys(datapoint.attributes, "${env:DOGBRIDGE_METRICS_LABEL_ALLOW_REGEX}")
+          - delete_matching_keys(datapoint.attributes, "${env:DOGBRIDGE_METRICS_LABEL_DENY_REGEX}")
+  batch:
+    timeout: 1s
+    send_batch_size: 1024
+
+exporters:
+  otlp_http/clickstack:
+    endpoint: http://clickstack-otel-collector:4318
+    compression: gzip
+
+service:
+  pipelines:
+    traces:
+      receivers: [datadog, otlp]
+      processors: [memory_limiter, resource, batch]
+      exporters: [otlp_http/clickstack]
+    metrics:
+      receivers: [statsd]
+      processors: [memory_limiter, resource, transform/drop_default_high_cardinality, transform/label_controls, batch]
+      exporters: [otlp_http/clickstack]
+    logs:
+      receivers: [otlp]
+      processors: [memory_limiter, resource, batch]
+      exporters: [otlp_http/clickstack]
