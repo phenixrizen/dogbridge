@@ -1,11 +1,11 @@
 # Current Limitations
 
-This project is in early scaffold maturity and currently optimized for trace migration pilots.
+This project is currently optimized for local migration pilots and validated backend demos built on upstream OpenTelemetry Collector components.
 
 ## Scope limitations
 
-- End-to-end local demo is trace-focused (Datadog APM -> dogbridge -> Tempo).
-- Metrics and logs migration tracks are planned but not yet feature-complete in the default distribution path.
+- Backend demos cover Datadog APM traces, DogStatsD metrics, and OTLP logs, but production rollout patterns still need environment-specific validation.
+- Datadog logs intake endpoints are not implemented; use OpenTelemetry log collection paths such as OTLP or filelog-style collection.
 - Helm chart production hardening is incomplete for large-cluster operational use.
 
 ## Datadog compatibility limitations

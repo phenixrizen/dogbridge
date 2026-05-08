@@ -4,10 +4,10 @@
 These instructions apply to the entire repository.
 
 ## Project intent
-`dogbridge` is an opinionated OpenTelemetry Collector distribution that provides Datadog-compatible ingestion as a migration bridge to open-source observability backends.
+`dogbridge` is an opinionated OpenTelemetry Collector configuration, demo, and validation kit that provides Datadog-compatible ingestion patterns as a migration bridge to open-source observability backends.
 
 ## Current maturity
-This repository is in an early scaffold stage. Prefer incremental, runnable progress over broad placeholders.
+This repository has runnable local demos and smoke-tested backend integrations. Prefer production-oriented incremental changes, keep examples executable, and avoid adding unvalidated placeholders.
 
 ## Contribution rules
 1. Keep changes focused and milestone-driven.
@@ -25,14 +25,14 @@ This repository is in an early scaffold stage. Prefer incremental, runnable prog
 
 ## Dependency and component guidance
 - Use the latest stable OpenTelemetry Collector release line unless a task explicitly requires an older pin.
-- When importing Collector components directly, depend on the component submodules in `go.mod`; do not rely on umbrella modules to supply component packages.
 - Do not reintroduce the deprecated OpenTelemetry `lokiexporter`. Send logs to Loki through the stable `otlphttp` exporter and Loki's OTLP ingestion endpoint.
-- After dependency or Collector component changes, run `go mod tidy` and `go test ./...`.
+- Prefer upstream `otel/opentelemetry-collector-contrib` for runnable demos; do not add a forked Collector runtime without a concrete requirement.
+- After Go dependency changes, run `go mod tidy` and `go test ./...`.
 
 ## Near-term priorities
-- Implement a runnable collector binary using OTel Collector builder/factories.
-- Provide one end-to-end local demo (dd-trace-go -> dogbridge -> tempo).
-- Replace placeholder docs with migration and compatibility specifics.
+- Validate every example config against the pinned upstream Collector version and its backend smoke test.
+- Expand Datadog compatibility coverage with tested traces, DogStatsD metrics, OTLP logs, and explicit unsupported Datadog-only behavior.
+- Keep backend, migration, and operations docs aligned with implemented behavior.
 
 ## Commit/PR expectations for agents
 - Summarize user-visible behavior changes.

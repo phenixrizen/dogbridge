@@ -1,10 +1,10 @@
 # dogbridge
 
-`dogbridge` is an opinionated OpenTelemetry Collector distribution for teams migrating from Datadog ingestion paths to open backends.
+`dogbridge` is an opinionated OpenTelemetry Collector configuration, demo, and validation kit for teams migrating from Datadog ingestion paths to open backends.
 
 ## What works now (May 2026)
 
-- Runnable collector entrypoint in `cmd/dogbridge`.
+- Runnable local demos using upstream `otel/opentelemetry-collector-contrib`.
 - Datadog APM trace ingest on `:8126` and OTLP ingest on `:4317/:4318`.
 - Trace forwarding to OTLP backends (Tempo, SigNoz, OpenObserve, and ClickStack demos included).
 - DogStatsD ingest and Prometheus remote write example in the Tempo compose config.
@@ -15,12 +15,13 @@
 
 ```mermaid
 flowchart LR
-    A[dd-trace-go] --> B[dogbridge datadogreceiver :8126]
-    C[OTLP clients] --> D[dogbridge otlpreceiver :4317/:4318]
-    B --> E[processors: memory_limiter/resource/batch]
-    D --> E
-    E --> F[OTLP exporter]
-    F --> G[Tempo]
+    CFG[dogbridge Collector YAML] -. configures .-> R
+    DD[Datadog APM clients] --> R[upstream collector-contrib receivers]
+    DS[DogStatsD clients] --> R
+    OTLP[OTLP clients] --> R
+    R --> P[processors: memory_limiter/resource/transform/batch]
+    P --> X[backend exporters]
+    X --> B[open observability backends]
 ```
 
 ```mermaid
@@ -31,10 +32,12 @@ flowchart TB
       OTLP[OTLP]
     end
 
-    subgraph dogbridge
-      R[Receivers]
-      P[Processors]
-      X[Exporters]
+    CFG[dogbridge Collector YAML]
+
+    subgraph Collector[upstream collector-contrib container]
+      R[Datadog, StatsD, and OTLP receivers]
+      P[Memory, resource, transform, and batch processors]
+      X[OTLP, OTLP HTTP, and remote-write exporters]
     end
 
     subgraph Backends
@@ -45,6 +48,7 @@ flowchart TB
       CS[ClickStack / HyperDX]
     end
 
+    CFG -. mounted config .-> R
     DD --> R
     DS --> R
     OTLP --> R
@@ -64,6 +68,7 @@ make demo-smoke-traces
 ```
 
 Expected result: smoke test reports a trace id queryable via Tempo APIs.
+The demo runs upstream `otel/opentelemetry-collector-contrib` with the dogbridge config mounted at `/etc/dogbridge/config.yaml`.
 
 ## Quickstart (SigNoz demo)
 
@@ -92,26 +97,21 @@ make demo-clickstack-smoke
 
 Then open the HyperDX UI at `http://localhost:3401`.
 
-## CLI usage
+## Collector Usage
 
 ```bash
-# default run
-./dogbridge
-
-# explicit config
-./dogbridge run --config examples/docker-compose/dogbridge.yaml
-
-# inline override
-./dogbridge run --config examples/docker-compose/dogbridge.yaml --set exporters::otlp::endpoint:tempo:4317
-
-# version
-./dogbridge version
+docker run --rm \
+  -p 8126:8126 \
+  -p 8125:8125/udp \
+  -p 4317:4317 \
+  -p 4318:4318 \
+  -v "$PWD/examples/docker-compose/dogbridge.yaml:/etc/dogbridge/config.yaml:ro" \
+  otel/opentelemetry-collector-contrib:0.151.0 \
+  --config=/etc/dogbridge/config.yaml
 ```
 
 ## Repository layout
 
-- `cmd/dogbridge`: cobra CLI + collector execution.
-- `distro/components.go`: enabled collector factories and resolver settings.
 - `examples/docker-compose`: local Tempo demo.
 - `examples/docker-compose/signoz`: local SigNoz demo.
 - `examples/docker-compose/openobserve`: local OpenObserve demo.

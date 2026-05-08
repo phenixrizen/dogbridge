@@ -11,6 +11,5 @@ exporters:
     endpoint: http://loki.monitoring.svc.cluster.local:3100/otlp
 ```
 
-The deprecated OpenTelemetry `lokiexporter` is intentionally not included in
-the Dogbridge binary because its published module versions stop before the
-latest collector release line.
+The deprecated OpenTelemetry `lokiexporter` is intentionally not used. Send logs
+to Loki through the stable OTLP HTTP exporter and Loki's native OTLP endpoint.

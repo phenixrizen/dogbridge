@@ -5,11 +5,10 @@ SIGNOZ_COMPOSE_FILE := examples/docker-compose/signoz/docker-compose.yaml
 OPENOBSERVE_COMPOSE_FILE := examples/docker-compose/openobserve/docker-compose.yaml
 CLICKSTACK_COMPOSE_FILE := examples/docker-compose/clickstack/docker-compose.yaml
 
-.PHONY: help build test fmt demo-up demo-down demo-smoke-traces demo-smoke-metrics demo-signoz-up demo-signoz-down demo-signoz-smoke demo-openobserve-up demo-openobserve-down demo-openobserve-smoke demo-clickstack-up demo-clickstack-down demo-clickstack-smoke
+.PHONY: help test fmt demo-up demo-down demo-smoke-traces demo-smoke-metrics demo-signoz-up demo-signoz-down demo-signoz-smoke demo-openobserve-up demo-openobserve-down demo-openobserve-smoke demo-clickstack-up demo-clickstack-down demo-clickstack-smoke
 
 help:
 	@echo "dogbridge targets"
-	@echo "  build               Build dogbridge binary"
 	@echo "  test                Run go tests"
 	@echo "  fmt                 Run go fmt"
 	@echo "  demo-up             Start Tempo demo stack"
@@ -26,9 +25,6 @@ help:
 	@echo "  demo-clickstack-down   Stop ClickStack/HyperDX demo stack"
 	@echo "  demo-clickstack-smoke  Run dd-trace smoke test against ClickStack demo"
 
-build:
-	go build ./cmd/dogbridge
-
 test:
 	go test ./...
 
@@ -36,7 +32,7 @@ fmt:
 	go fmt ./...
 
 demo-up:
-	docker compose -f $(COMPOSE_FILE) up -d
+	docker compose -f $(COMPOSE_FILE) up -d --build --remove-orphans
 	@echo "Grafana: http://localhost:3000 (admin/admin)"
 
 
